@@ -12,6 +12,7 @@ setuptools.setup(
     version="1.3.19",
     author="Sourcepole AG",
     author_email="info@sourcepole.ch",
+    license='MIT',
     description="Shared modules for QWC services",
     long_description=desc,
     long_description_content_type="text/x-rst",
@@ -23,4 +24,25 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.5',
+    install_requires=[
+        "flask_jwt_extended",
+        "flask_login",
+        "flask_restx",
+        "flask",
+        "jwt",
+        "sqlalchemy",
+        "werkzeug",
+    ],
+    extras_require={
+        "dev": [
+            "pytest",
+            "twine",
+            "wheel",
+        ],
+        "tests": [
+            "pytest",
+            "twine",
+            "wheel",
+        ]
+    }
 )

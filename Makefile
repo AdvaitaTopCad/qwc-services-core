@@ -1,14 +1,29 @@
-all: test
+ifeq ($(OS),Windows_NT)
+    detected_OS := Windows
+else
+    detected_OS := $(shell uname)
+endif
+ifeq ($(OS),Windows_NT) 
+	RMRF = rmdir /s /q
+else
+	RMRF = rm -rf
+endif
+
+all: test testdist
 
 sdist:
-	rm -rf dist
-	python3 setup.py sdist bdist_wheel
-	python3 -m twine check dist/*
+	$(RMRF) dist
+	$(RMRF) build
+	python setup.py sdist bdist_wheel
+	python -m twine check dist/*
 
-test: sdist
+test:
+	python -m pytest -v
+
+testdist: sdist
 	# https://packaging.python.org/guides/using-testpypi
-	python3 -m twine upload --repository testpypi dist/*
+	python -m twine upload --repository testpypi dist/*
 	echo Test with `python -m pip install --index-url https://test.pypi.org/simple/ qwc-services-core`
 
 publish: sdist
-	python3 -m twine upload dist/*
+	python -m twine upload dist/*

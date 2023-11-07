@@ -1,15 +1,15 @@
 [![PyPI version](https://img.shields.io/pypi/v/qwc-services-core)](https://pypi.org/project/qwc-services-core)
 
-
 QWC Services Core
 =================
 
-The QWC Services are a collection of microservices providing configurations for and authorized access to different QWC Map Viewer components.
+The QWC Services are a collection of microservices providing configurations
+for and authorized access to different QWC Map Viewer components.
 
-See [QWC Docker](https://github.com/qwc-services/qwc-docker/) for using QWC Services with Docker.
+See [QWC Docker](https://github.com/qwc-services/qwc-docker/) for
+using QWC Services with Docker.
 
 This repository contains the shared modules for QWC services.
-
 
 Development
 ===========
