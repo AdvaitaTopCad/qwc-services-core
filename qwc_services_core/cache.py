@@ -1,5 +1,5 @@
-import time
 import copy
+import time
 
 
 class ExpiringDict:
@@ -17,8 +17,8 @@ class ExpiringDict:
         :param int duration: Time in seconds until expiry (default: 300s)
         """
         self.cache[key] = {
-            'value': copy.deepcopy(value),
-            'expires': time.time() + duration
+            "value": copy.deepcopy(value),
+            "expires": time.time() + duration,
         }
 
     def lookup(self, key):
@@ -33,9 +33,9 @@ class ExpiringDict:
         if key in self.cache:
             entry = self.cache[key]
             # check expiry
-            if time.time() < entry['expires']:
+            if time.time() < entry["expires"]:
                 # return value
-                res = {'value':  copy.deepcopy(entry['value'])}
+                res = {"value": copy.deepcopy(entry["value"])}
             else:
                 # remove expired value
                 del self.cache[key]
@@ -43,7 +43,7 @@ class ExpiringDict:
         return res
 
 
-class Cache():
+class Cache:
     """Nested dict for values where each key will expire after some time."""
 
     def __init__(self):
@@ -59,16 +59,13 @@ class Cache():
         """
         if identity is not None:
             if isinstance(identity, dict):
-                return [
-                    identity.get('group'),
-                    identity.get('username')
-                ]
+                return [identity.get("group"), identity.get("username")]
             else:
                 # identity is username
                 return [None, identity]
         else:
             # keys for empty user
-            return [None, '_public_']
+            return [None, "_public_"]
 
     def cache_entry(self, service, identity, keys):
         # cache is a nested dict with the following levels:
@@ -99,12 +96,11 @@ class Cache():
         entry = cache.lookup(key)
         if entry:
             # print("Reading data from cache with key '%s'" % key)
-            return entry['value']
+            return entry["value"]
         else:
             return None
 
-    def write(self, service, identity, keys, data,
-              cache_duration):
+    def write(self, service, identity, keys, data, cache_duration):
         cache, key = self.cache_entry(service, identity, keys)
         # print("Writing data into cache with key '%s'" % key)
         cache.set(key, data, cache_duration)

@@ -35,6 +35,9 @@ setuptools.setup(
     ],
     extras_require={
         "dev": [
+            "black",
+            "isort",
+            "mypy",
             "pytest",
             "twine",
             "wheel",

@@ -3,7 +3,7 @@ import os
 from sqlalchemy import create_engine
 
 
-class DatabaseEngine():
+class DatabaseEngine:
     """Helper for database connections using SQLAlchemy engines"""
 
     def __init__(self):
@@ -19,8 +19,7 @@ class DatabaseEngine():
         """
         engine = self.engines.get(conn_str)
         if not engine:
-            engine = create_engine(
-                conn_str, pool_pre_ping=True, echo=False)
+            engine = create_engine(conn_str, pool_pre_ping=True, echo=False)
             self.engines[conn_str] = engine
         return engine
 
@@ -32,16 +31,13 @@ class DatabaseEngine():
         """
         conn_str = os.environ.get(env_name, default)
         if conn_str is None:
-            raise Exception(
-                'db_engine_env: Environment variable %s not set' % env_name)
+            raise Exception("db_engine_env: Environment variable %s not set" % env_name)
         return self.db_engine(conn_str)
 
     def geo_db(self):
         """Return engine for default GeoDB."""
-        return self.db_engine_env('GEODB_URL',
-                                  'postgresql:///?service=qwc_geodb')
+        return self.db_engine_env("GEODB_URL", "postgresql:///?service=qwc_geodb")
 
     def config_db(self):
         """Return engine for default ConfigDB."""
-        return self.db_engine_env('CONFIGDB_URL',
-                                  'postgresql:///?service=qwc_configdb')
+        return self.db_engine_env("CONFIGDB_URL", "postgresql:///?service=qwc_configdb")

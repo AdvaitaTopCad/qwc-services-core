@@ -2,15 +2,18 @@
 """
 import os
 import re
-from flask import request
-from .jwt import jwt_manager
-from flask_jwt_extended import jwt_required, get_jwt_identity
 
+from flask import request
+from flask_jwt_extended import get_jwt_identity, jwt_required
+
+from .jwt import jwt_manager
 
 # Accept user name passed in Basic Auth header
-# (password has to checkded before!)
-ALLOW_BASIC_AUTH_USER = os.environ.get('ALLOW_BASIC_AUTH_USER', 'False') \
-    .lower() in ('t', 'true')
+# (password has to checked before!)
+ALLOW_BASIC_AUTH_USER = os.environ.get("ALLOW_BASIC_AUTH_USER", "False").lower() in (
+    "t",
+    "true",
+)
 
 
 def auth_manager(app, api=None):
@@ -33,7 +36,7 @@ def get_username(identity):
     """Get username"""
     if identity:
         if isinstance(identity, dict):
-            username = identity.get('username')
+            username = identity.get("username")
         else:
             # identity is username
             username = identity
@@ -47,8 +50,8 @@ def get_groups(identity):
     groups = []
     if identity:
         if isinstance(identity, dict):
-            groups = identity.get('groups', [])
-            group = identity.get('group')
+            groups = identity.get("groups", [])
+            group = identity.get("group")
             if group:
                 groups.append(group)
     return groups
@@ -68,24 +71,26 @@ def get_auth_user():
 class GroupNameMapper:
     """Group name mapping with regular expressions"""
 
-    def __init__(self, default=''):
-        group_mappings = os.environ.get('GROUP_MAPPINGS', default)
+    def __init__(self, default=""):
+        group_mappings = os.environ.get("GROUP_MAPPINGS", default)
 
         def collect(mapping):
-            regex, *replacement = mapping.split('~', 1)
+            regex, *replacement = mapping.split("~", 1)
             return (re.compile(regex), replacement[0])
 
-        self.group_mappings = list(
-            map(collect, group_mappings.split('#'))) if group_mappings else []
+        self.group_mappings = (
+            list(map(collect, group_mappings.split("#"))) if group_mappings else []
+        )
 
     def mapped_group(self, group):
         # LDAP servers my return a group as list object
         if isinstance(group, list):
-            group = ' '.join(group)
-        for (regex, replacement) in self.group_mappings:
+            group = " ".join(group)
+        for regex, replacement in self.group_mappings:
             if regex.match(group):
                 return regex.sub(replacement, group)
         return group
+
 
 # Usage examples:
 # mapper = GroupNameMapper('ship_crew~crew#gis.role.(.*)~\\1')

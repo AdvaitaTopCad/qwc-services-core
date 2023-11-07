@@ -1,7 +1,9 @@
-from flask_restx import Api as BaseApi
 from collections import OrderedDict
-from werkzeug.datastructures import MultiDict
+from typing import Dict, Optional, Union
+
+from flask_restx import Api as BaseApi
 from flask_restx.reqparse import Argument
+from werkzeug.datastructures import MultiDict
 
 
 class Api(BaseApi):
@@ -13,10 +15,11 @@ class Api(BaseApi):
 
     see also https://github.com/noirbizarre/flask-restplus/issues/247
     """
+
     def _register_doc(self, app_or_blueprint):
         if self._add_specs and self._doc:
             # Register documentation before root if enabled
-            app_or_blueprint.add_url_rule(self._doc, 'doc', self.render_doc)
+            app_or_blueprint.add_url_rule(self._doc, "doc", self.render_doc)
         # skip default root route
         # app_or_blueprint.add_url_rule(self.prefix or '/', 'root',
         #                               self.render_root)
@@ -44,12 +47,24 @@ def create_model(api, name, fields):
 
 
 class CaseInsensitiveMultiDict(MultiDict):
-    """ A MultiDict subclass to use with RequestParser which is
-        case-insensitives for query parameter key names
     """
-    def __init__(self, mapping=None):
+    A MultiDict subclass to use with RequestParser which is
+    case-insensitive for query parameter key names.
+
+    Attributes
+    ----------
+
+    lower_key_map : dict
+        A mapping from lowercase keys to the real keys.
+    """
+
+    lower_key_map: Dict[str, str]
+
+    def __init__(
+            self,
+            mapping: Optional[Union[MultiDict, Dict[str, str]]] = None
+    ):
         super().__init__(mapping)
-        # map lowercase keys to the real keys
         self.lower_key_map = {key.lower(): key for key in self}
 
     def __contains__(self, key):
