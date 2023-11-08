@@ -39,11 +39,13 @@ setuptools.setup(
             "isort",
             "mypy",
             "pytest",
+            "pytest-mock",
             "twine",
             "wheel",
         ],
         "tests": [
             "pytest",
+            "pytest-mock",
             "twine",
             "wheel",
         ]

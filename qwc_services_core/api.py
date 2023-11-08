@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 from flask_restx import Api as BaseApi
 from flask_restx.reqparse import Argument
@@ -33,12 +33,13 @@ class Api(BaseApi):
         return create_model(self, name, fields)
 
 
-def create_model(api, name, fields):
-    """Helper for creating api models with ordered fields
+def create_model(api: Api, name: str, fields: Tuple[str, Any]):
+    """
+    Helper for creating api models with ordered fields.
 
-    :param flask_restx.Api api: Flask-RESTX Api object
-    :param str name: Model name
-    :param list fields: List of tuples containing ['field name', <type>]
+    :param api: Flask-RESTX Api object
+    :param name: Model name
+    :param fields: List of tuples containing ['field name', <type>]
     """
     d = OrderedDict()
     for field in fields:
@@ -50,6 +51,14 @@ class CaseInsensitiveMultiDict(MultiDict):
     """
     A MultiDict subclass to use with RequestParser which is
     case-insensitive for query parameter key names.
+
+    Example
+    -------
+
+    >>> from qwc_services_core.api import CaseInsensitiveMultiDict
+    >>> parser = CaseInsensitiveMultiDict({ 'key': 'value' })
+    >>> 'key' in parser  # True
+    >>> 'KEY' in parser  # True
 
     Attributes
     ----------
