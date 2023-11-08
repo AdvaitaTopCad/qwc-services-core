@@ -32,8 +32,8 @@ class Translator:
                 self.translations = json.load(f)
         except Exception as e:
             app.logger.error(
-                "Failed to load translation strings for locale '%s' from %s, loading default locale\n%s"
-                % (locale, path, e)
+                "Failed to load translation strings for locale '%s' "
+                "from %s, loading default locale\n%s" % (locale, path, e)
             )
             path = os.path.join(app.root_path, "translations/%s.json" % DEFAULT_LOCALE)
             with open(path, "r") as f:

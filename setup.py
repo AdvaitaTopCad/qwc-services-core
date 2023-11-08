@@ -36,10 +36,12 @@ setuptools.setup(
     extras_require={
         "dev": [
             "black",
+            "flake8-pyproject",
+            "flake8",
             "isort",
             "mypy",
-            "pytest",
             "pytest-mock",
+            "pytest",
             "twine",
             "wheel",
         ],

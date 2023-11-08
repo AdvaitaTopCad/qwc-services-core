@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock
 
 import qwc_services_core.auth
-from qwc_services_core.app_test import app
 
 
 def test_get_username():
@@ -10,7 +9,7 @@ def test_get_username():
     assert get_username(None) is None
     assert get_username("foo") == "foo"
     assert get_username({"username": "foo"}) == "foo"
-    assert get_username({"xxx": "foo"}) == None
+    assert get_username({"xxx": "foo"}) is None
 
 
 def test_get_groups():
@@ -44,7 +43,7 @@ class TestGetAuthUser:
 
         get_jwt_identity.return_value = None
 
-        assert get_auth_user() == None
+        assert get_auth_user() is None
 
     def test_without_identity_and_basic_auth(self, app, mocker):
         with app.test_request_context("/"):
@@ -56,7 +55,7 @@ class TestGetAuthUser:
             get_jwt_identity.return_value = None
             request.authorization = None
 
-            assert get_auth_user() == None
+            assert get_auth_user() is None
 
             request.authorization = MagicMock()
             request.authorization.username = "foo"

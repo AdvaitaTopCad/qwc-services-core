@@ -2,7 +2,7 @@
 """
 import os
 import re
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from flask import Flask, request
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required
@@ -33,7 +33,7 @@ def get_identity() -> Any:
     return get_jwt_identity()
 
 
-def get_username(identity: Union[None, str, Dict[str, str]]) -> str:
+def get_username(identity: Union[None, str, Dict[str, str]]) -> Optional[str]:
     """
     Get the username from the identity object.
 

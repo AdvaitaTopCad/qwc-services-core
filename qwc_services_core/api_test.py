@@ -17,7 +17,7 @@ class TestApi:
 
 def test_create_model():
     """Test create_model() helper function"""
-    from qwc_services_core.api import Api, create_model
+    from qwc_services_core.api import create_model
 
     api = MagicMock()
     fields = [("field1", str), ("field2", int)]
