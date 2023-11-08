@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 import qwc_services_core.auth
 from qwc_services_core.app_test import app
 
@@ -18,41 +19,40 @@ def test_get_groups():
     assert get_groups(None) == []
     assert get_groups("foo") == []
     assert get_groups({"groups": ["foo", "bar"]}) == ["foo", "bar"]
-    assert get_groups({
-        "groups": ["foo", "bar"],
-        "group": "baz",
-    }) == ["foo", "bar", "baz"]
+    assert get_groups(
+        {
+            "groups": ["foo", "bar"],
+            "group": "baz",
+        }
+    ) == ["foo", "bar", "baz"]
     assert get_groups({"xxx": "foo"}) == []
 
 
 class TestGetAuthUser:
     def test_with_identity(self, mocker):
         mocker.patch("qwc_services_core.auth.get_jwt_identity")
-        from qwc_services_core.auth import get_jwt_identity, get_auth_user
+        from qwc_services_core.auth import get_auth_user, get_jwt_identity
+
         get_jwt_identity.return_value = "foo"
 
         assert get_auth_user() == "foo"
 
     def test_without_identity_no_basic_auth(self, mocker):
         mocker.patch("qwc_services_core.auth.get_jwt_identity")
-        mocker.patch.object(
-            qwc_services_core.auth, 'ALLOW_BASIC_AUTH_USER', False
-        )
-        from qwc_services_core.auth import get_jwt_identity, get_auth_user
+        mocker.patch.object(qwc_services_core.auth, "ALLOW_BASIC_AUTH_USER", False)
+        from qwc_services_core.auth import get_auth_user, get_jwt_identity
+
         get_jwt_identity.return_value = None
 
         assert get_auth_user() == None
 
     def test_without_identity_and_basic_auth(self, app, mocker):
-        with app.test_request_context('/'):
+        with app.test_request_context("/"):
             mocker.patch("qwc_services_core.auth.get_jwt_identity")
             mocker.patch("qwc_services_core.auth.request")
-            mocker.patch.object(
-                qwc_services_core.auth, 'ALLOW_BASIC_AUTH_USER', True
-            )
-            from qwc_services_core.auth import (
-                get_jwt_identity, get_auth_user, request
-            )
+            mocker.patch.object(qwc_services_core.auth, "ALLOW_BASIC_AUTH_USER", True)
+            from qwc_services_core.auth import get_auth_user, get_jwt_identity, request
+
             get_jwt_identity.return_value = None
             request.authorization = None
 
@@ -60,7 +60,7 @@ class TestGetAuthUser:
 
             request.authorization = MagicMock()
             request.authorization.username = "foo"
-            assert get_auth_user() == 'foo'
+            assert get_auth_user() == "foo"
 
 
 class TestGroupNameMapper:
@@ -107,6 +107,7 @@ class TestGroupNameMapper:
     def test_mapped_group(self, mocker):
         mocker.patch("qwc_services_core.auth.os")
         from qwc_services_core.auth import GroupNameMapper, os
+
         os.environ = {}
 
         mapper = GroupNameMapper()
@@ -114,6 +115,6 @@ class TestGroupNameMapper:
 
         mapper = GroupNameMapper("ship_crew~crew")
         assert mapper.mapped_group("ship_crew") == "crew"
-    
+
         mapper = GroupNameMapper("foo~lorem")
         assert mapper.mapped_group(["foo", "bar"]) == "lorem bar"

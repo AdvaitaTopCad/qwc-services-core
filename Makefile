@@ -33,8 +33,8 @@ typecheck:
 test:
 	python -m pytest -v
 
+# https://packaging.python.org/guides/using-testpypi
 testdist: sdist
-	# https://packaging.python.org/guides/using-testpypi
 	python -m twine upload --repository testpypi dist/*
 	echo Test with `python -m pip install --index-url https://test.pypi.org/simple/ $(PACKAGE_NAME)`
 

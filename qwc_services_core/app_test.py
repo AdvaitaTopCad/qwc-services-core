@@ -1,5 +1,5 @@
-from flask import Flask
 import pytest
+from flask import Flask
 
 from qwc_services_core.app import app_nocache
 
@@ -7,9 +7,11 @@ from qwc_services_core.app import app_nocache
 @pytest.fixture()
 def app():
     app = Flask(__name__)
-    app.config.update({
-        "TESTING": True,
-    })
+    app.config.update(
+        {
+            "TESTING": True,
+        }
+    )
 
     app_nocache(app)
     yield app

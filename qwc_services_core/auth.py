@@ -4,7 +4,7 @@ import os
 import re
 from typing import Any, Dict, List, Union
 
-from flask import request, Flask
+from flask import Flask, request
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required
 
 from .jwt import jwt_manager
@@ -105,8 +105,7 @@ class GroupNameMapper:
             return (re.compile(regex), replacement[0] if replacement else "")
 
         self.group_mappings = (
-            list(map(collect, group_mappings.split("#")))
-            if group_mappings else []
+            list(map(collect, group_mappings.split("#"))) if group_mappings else []
         )
 
     def mapped_group(self, group: Union[str, List[str]]) -> str:

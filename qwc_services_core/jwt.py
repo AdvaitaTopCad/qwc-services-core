@@ -4,6 +4,7 @@ import os
 
 from flask import redirect, request
 from flask_jwt_extended import JWTManager, unset_jwt_cookies
+
 from jwt.exceptions import PyJWTError
 
 

@@ -1,5 +1,6 @@
 from flask import Flask, Request
 
+
 def app_nocache(app: Flask):
     """Adds various cache-disabling headers to all responses returned by the
         application
