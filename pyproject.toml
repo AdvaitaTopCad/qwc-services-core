@@ -8,3 +8,9 @@ build-backend = "setuptools.build_meta"
 testpaths = [
     "qwc_services_core",
 ]
+
+[tool.isort]
+skip = ["*_test.py", "test_*"]
+profile = "black"
+src_paths = "qwc_services_core"
+known_first_party = "qwc_services_core"

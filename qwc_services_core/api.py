@@ -69,10 +69,7 @@ class CaseInsensitiveMultiDict(MultiDict):
 
     lower_key_map: Dict[str, str]
 
-    def __init__(
-            self,
-            mapping: Optional[Union[MultiDict, Dict[str, str]]] = None
-    ):
+    def __init__(self, mapping: Optional[Union[MultiDict, Dict[str, str]]] = None):
         super().__init__(mapping)
         self.lower_key_map = {key.lower(): key for key in self}
 
