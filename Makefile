@@ -14,9 +14,10 @@ endif
 all: lint test testdist
 
 sdist:
-	$(RMRF) dist
-	$(RMRF) build
-	python setup.py sdist bdist_wheel
+	$(RMRF) dist || echo "dist not found, skipping"
+	$(RMRF) build || echo "build not found, skipping"
+	$(RMRF) $(MODULE_NAME).egg-info || echo "egg-info not found, skipping"
+	python -m build
 	python -m twine check dist/*
 
 lint:

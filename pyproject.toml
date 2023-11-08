@@ -1,8 +1,56 @@
+[project]
+name = "qwc-services-core"
+version = "1.3.19"
+description = "Shared modules for QWC services"
+authors = [{name = "Sourcepole AG", email = "info@sourcepole.ch"}]
+readme = "README.md"
+requires-python = ">=3.5"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "flask_jwt_extended",
+    "flask_login",
+    "flask_restx",
+    "flask",
+    "PyJWT",
+    "sqlalchemy",
+    "werkzeug",
+]
+
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "flake8-pyproject",
+    "flake8",
+    "isort",
+    "mypy",
+    "pytest-mock",
+    "pytest",
+    "twine",
+    "wheel",
+]
+tests = [
+    "pytest",
+    "pytest-mock",
+    "twine",
+    "wheel",
+]
+
+
 [build-system]
 requires = [
     "setuptools >=30.3", "wheel"
 ]
 build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools]
+include-package-data = false
+packages = ["qwc_services_core"]
 
 
 [tool.pytest.ini_options]
