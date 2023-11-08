@@ -1,8 +1,7 @@
-"""Authentication helper functions
-"""
+"""Authentication helper functions."""
 import os
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from flask import Flask, request
 from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required
@@ -18,28 +17,49 @@ ALLOW_BASIC_AUTH_USER = os.environ.get("ALLOW_BASIC_AUTH_USER", "False").lower()
 
 
 def auth_manager(app: Flask, api=None) -> JWTManager:
-    """Authentication setup for Flask app"""
+    """Authentication setup for Flask app.
+
+    Args:
+        app: Flask app.
+        api: Flask-RESTX Api object.
+
+    Returns:
+        The JWTManager object.
+    """
     # Setup the Flask-JWT-Extended extension
     return jwt_manager(app, api)
 
 
-def optional_auth(fn) -> Any:
-    """Authentication view decorator"""
+def optional_auth(fn: Callable) -> Any:
+    """Authentication view decorator.
+
+    Args:
+        fn: The view function to decorate.
+
+    Returns:
+        The decorated view function.
+    """
     return jwt_required(optional=True)(fn)
 
 
 def get_identity() -> Any:
-    """Get identity (username oder dict with username and groups)"""
+    """Get identity (username oder dict with username and groups).
+
+    Returns:
+        The identity object.
+    """
     return get_jwt_identity()
 
 
 def get_username(identity: Union[None, str, Dict[str, str]]) -> Optional[str]:
-    """
-    Get the username from the identity object.
+    """Get the username from the identity object.
 
     Args:
         identity: The identity object. Can be a string or a dict with a
         `username` key.
+
+    Returns:
+        The username or ``None`` if no username was found.
     """
     if identity:
         if isinstance(identity, dict):
@@ -53,8 +73,7 @@ def get_username(identity: Union[None, str, Dict[str, str]]) -> Optional[str]:
 
 
 def get_groups(identity) -> List[str]:
-    """
-    Get user groups.
+    """Get user groups.
 
     Args:
         identity: The identity object.
@@ -73,7 +92,7 @@ def get_groups(identity) -> List[str]:
 
 
 def get_auth_user() -> str:
-    """Get identity or optional pre-authenticated basic auth user"""
+    """Get identity or optional pre-authenticated basic auth user."""
     identity = get_identity()
     if not identity and ALLOW_BASIC_AUTH_USER:
         auth = request.authorization
@@ -84,20 +103,23 @@ def get_auth_user() -> str:
 
 
 class GroupNameMapper:
-    """
-    Group name mapping with regular expressions
+    r"""Group name mapping with regular expressions.
 
-    Example
-    -------
-
-    >>> mapper = GroupNameMapper('ship_crew~crew#gis.role.(.*)~\\1')
-    >>> print(mapper.mapped_group('ship_crew'))
-    >>> print(mapper.mapped_group('gis.role.admin'))
-    >>> print(mapper.mapped_group('gis.role.user.group1'))
-    >>> print(mapper.mapped_group('gis.none'))
+    Example:
+        >>> mapper = GroupNameMapper('ship_crew~crew#gis.role.(.*)~\\1')
+        >>> print(mapper.mapped_group('ship_crew'))
+        >>> print(mapper.mapped_group('gis.role.admin'))
+        >>> print(mapper.mapped_group('gis.role.user.group1'))
+        >>> print(mapper.mapped_group('gis.none'))
     """
 
     def __init__(self, default: str = ""):
+        """Constructor.
+
+        Args:
+            default: The default group name if ``GROUP_MAPPINGS`` env var is
+            not set or has an empty string.
+        """
         group_mappings: str = os.environ.get("GROUP_MAPPINGS", default)
 
         def collect(mapping: str):
@@ -109,8 +131,7 @@ class GroupNameMapper:
         )
 
     def mapped_group(self, group: Union[str, List[str]]) -> str:
-        """
-        Maps group names to internal name using regular expressions.
+        """Maps group names to internal name using regular expressions.
 
         Args:
             group: The group name or list of group names (LDAP servers my

@@ -1,15 +1,18 @@
+"""Utility code that enhances Flask-RESTX API."""
 from collections import OrderedDict
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+from flask import Request
 from flask_restx import Api as BaseApi
 from flask_restx.reqparse import Argument
 from werkzeug.datastructures import MultiDict
 
 
 class Api(BaseApi):
-    """Custom Flask-RESTPlus Api subclass for overriding default root route
+    """Custom Flask-RESTPlus Api subclass for overriding default root route.
 
-    NOTE: endpoint of route '/' must be named 'root'::
+    Note:
+        The endpoint of route '/' must be named 'root'.
 
     >>> @api.route('/', endpoint='root')
 
@@ -24,22 +27,29 @@ class Api(BaseApi):
         # app_or_blueprint.add_url_rule(self.prefix or '/', 'root',
         #                               self.render_root)
 
-    def create_model(self, name, fields):
-        """Helper for creating api models with ordered fields
+    def create_model(self, name: str, fields: List[Tuple(str, type)]) -> Any:
+        """Helper for creating api models with ordered fields.
 
-        :param str name: Model name
-        :param list fields: List of tuples containing ['field name', <type>]
+        Args:
+            name: Model name
+            fields: List of tuples containing ['field name', <type>]
+
+        Returns:
+            The model object.
         """
         return create_model(self, name, fields)
 
 
-def create_model(api: Api, name: str, fields: Tuple[str, Any]):
-    """
-    Helper for creating api models with ordered fields.
+def create_model(api: Api, name: str, fields: Tuple[str, Any]) -> Any:
+    """Helper for creating api models with ordered fields.
 
-    :param api: Flask-RESTX Api object
-    :param name: Model name
-    :param fields: List of tuples containing ['field name', <type>]
+    Args:
+        api: Flask-RESTX Api object
+        name: Model name
+        fields: List of tuples containing ['field name', <type>]
+
+    Returns:
+        The model object.
     """
     d = OrderedDict()
     for field in fields:
@@ -48,41 +58,78 @@ def create_model(api: Api, name: str, fields: Tuple[str, Any]):
 
 
 class CaseInsensitiveMultiDict(MultiDict):
-    """
-    A MultiDict subclass to use with RequestParser which is
-    case-insensitive for query parameter key names.
+    """A MultiDict subclass.
 
-    Example
-    -------
+    This is used with RequestParser which is case-insensitive for query
+    parameter key names.
 
-    >>> from qwc_services_core.api import CaseInsensitiveMultiDict
-    >>> parser = CaseInsensitiveMultiDict({ 'key': 'value' })
-    >>> 'key' in parser  # True
-    >>> 'KEY' in parser  # True
+    Example:
+        >>> from qwc_services_core.api import CaseInsensitiveMultiDict
+        >>> parser = CaseInsensitiveMultiDict({ 'key': 'value' })
+        >>> 'key' in parser  # True
+        >>> 'KEY' in parser  # True
 
-    Attributes
-    ----------
-
-    lower_key_map : dict
-        A mapping from lowercase keys to the real keys.
+    Attributes:
+        lower_key_map
+            A mapping from lowercase keys to the real keys.
     """
 
     lower_key_map: Dict[str, str]
 
     def __init__(self, mapping: Optional[Union[MultiDict, Dict[str, str]]] = None):
+        """Constructor.
+
+        Args:
+            mapping: A mapping of keys to values.
+        """
         super().__init__(mapping)
         self.lower_key_map = {key.lower(): key for key in self}
 
-    def __contains__(self, key):
+    def __contains__(self, key: str) -> bool:
+        """Check if key is in the dict.
+
+        Args:
+            key: The key to check.
+
+        Returns:
+            True if the key is in the dict.
+        """
         return key.lower() in self.lower_key_map
 
-    def getlist(self, key):
+    def getlist(self, key: str) -> List[str]:
+        """Get a list of values for a key.
+
+        Args:
+            key: The key to get values for.
+
+        Returns:
+            A list of values for the key.
+        """
         return super().getlist(self.lower_key_map.get(key.lower()))
 
     def pop(self, key):
+        """Remove a key and return its value.
+
+        Note:
+            The ``key in self`` will still return ``True`` because the key is
+            not removed from internal map.
+
+        Args:
+            key: The key to remove.
+
+        Returns:
+            The value of the removed key.
+        """
         return super().pop(self.lower_key_map.get(key.lower()))
 
 
 class CaseInsensitiveArgument(Argument):
-    def source(self, request):
+    """An argument that is case-insensitive for query parameter key names."""
+
+    def source(self, request: Request) -> CaseInsensitiveMultiDict:
+        """Create a case-insensitive multi-dictionary.
+
+        Args:
+            request: The flask request object to parse arguments from.
+        """
         return CaseInsensitiveMultiDict(super().source(request))

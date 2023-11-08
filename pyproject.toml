@@ -24,6 +24,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
     "black",
+    "flake8-docstrings",
     "flake8-pyproject",
     "flake8",
     "isort",
@@ -73,3 +74,5 @@ exclude = [".+_test.py", "test_.+"]
 
 [tool.flake8]
 max-line-length = 88
+docstring-convention = "google"
+exclude = ["*_test.py", "test_*"]
