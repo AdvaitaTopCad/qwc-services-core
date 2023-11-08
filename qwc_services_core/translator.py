@@ -1,18 +1,24 @@
+"""Translation support."""
 import glob
 import json
 import os
+from typing import Any, Dict, Union, cast
+
+from flask import Flask, Request
 
 
 class Translator:
-    """Class for translating strings via json files"""
+    """Class for translating strings via json files."""
 
-    def __init__(self, app, request):
+    translations: Dict[str, Union[str, Dict[str, str]]]
+
+    def __init__(self, app: Flask, request: Request):
         """Constructor.
 
-        :param object app: The Flask app
-        :param object request: The Flask request
+        Args:
+            app: Flask app
+            request: Flask request
         """
-
         supported_locales = list(
             map(
                 lambda path: os.path.basename(path)[0:-5],
@@ -39,24 +45,29 @@ class Translator:
             with open(path, "r") as f:
                 self.translations = json.load(f)
 
-    def tr(self, msgId):
+    def tr(self, msg_id: str):
         """Translate a string.
 
-        :param str msgId: The message id
-        """
+        Args:
+            msg_id: The message id as a path, with components
+            separated by ``.``.
 
-        parts = msgId.split(".")
+        Returns:
+            The translated string if the key indicated by the path in `msg_id`
+            was located or ``msg_id`` otherwise.
+        """
+        parts = msg_id.split(".")
         lookup = self.translations
         for part in parts:
             if isinstance(lookup, dict):
                 # get next lookup level
-                lookup = lookup.get(part)
+                lookup = cast(Any, lookup.get(part))
             else:
                 # lookup level too deep
                 lookup = None
             if lookup is None:
-                # return input msgId if not found
-                lookup = msgId
+                # return input msg_id if not found
+                lookup = msg_id
                 break
 
         return lookup
