@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Any, cast
 
 from flask import Flask, redirect, request
 from flask_jwt_extended import JWTManager, unset_jwt_cookies
@@ -8,10 +9,7 @@ from jwt.exceptions import PyJWTError
 
 
 def jwt_manager(app: Flask, api=None):
-    """Setup Flask-JWT-Extended extension for services with authenticated access.
-
-
-    """
+    """Setup Flask-JWT-Extended extension for services with authenticated access."""
     # https://flask-jwt-extended.readthedocs.io/en/stable/options
     app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
     app.config["JWT_ACCESS_COOKIE_NAME"] = os.environ.get(
@@ -60,7 +58,7 @@ def jwt_manager(app: Flask, api=None):
     def handle_invalid_token(err: str):
         # Unset cookies and redirect to requested page on token error
         resp = redirect(request.url)
-        unset_jwt_cookies(resp)
+        unset_jwt_cookies(cast(Any, resp))
         return resp
 
     @jwt.unauthorized_loader

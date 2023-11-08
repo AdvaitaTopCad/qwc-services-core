@@ -30,14 +30,22 @@ dev = [
     "flake8",
     "isort",
     "mypy",
+    "pytest-cov",
     "pytest-mock",
     "pytest",
     "twine",
     "wheel",
 ]
 tests = [
-    "pytest",
+    "black",
+    "flake8-docstrings",
+    "flake8-pyproject",
+    "flake8",
+    "isort",
+    "mypy",
+    "pytest-cov",
     "pytest-mock",
+    "pytest",
     "twine",
     "wheel",
 ]

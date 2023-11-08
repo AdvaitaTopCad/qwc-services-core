@@ -12,7 +12,7 @@ DEFAULT_TENANT = "default"
 
 
 class TenantHandlerBase:
-    """Tenant handler base class"""
+    """Tenant handler base class."""
 
     def __init__(self):
         self.tenant_name = os.environ.get("QWC_TENANT")
@@ -70,7 +70,7 @@ class TenantHandlerBase:
 
 
 class TenantHandler(TenantHandlerBase):
-    """Tenant handler with configuraton cache"""
+    """Tenant handler with configuration cache"""
 
     def __init__(self, logger):
         """Constructor

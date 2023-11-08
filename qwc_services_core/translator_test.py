@@ -33,7 +33,7 @@ class TestTranslator:
         t = Translator(app, req)
         t.translations = {"lorem": "ipsum"}
         assert t.tr("lorem") == "ipsum"
-        assert t.tr("dolor") is "dolor"
+        assert t.tr("dolor") == "dolor"
 
         t.translations = {
             "lorem": {
