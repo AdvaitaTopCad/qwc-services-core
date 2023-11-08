@@ -29,7 +29,7 @@ setuptools.setup(
         "flask_login",
         "flask_restx",
         "flask",
-        "jwt",
+        "PyJWT",
         "sqlalchemy",
         "werkzeug",
     ],
