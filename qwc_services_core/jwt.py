@@ -1,15 +1,17 @@
 import json
 import os
 
-from flask import redirect, request
+from flask import Flask, redirect, request
 from flask_jwt_extended import JWTManager, unset_jwt_cookies
 
 from jwt.exceptions import PyJWTError
 
 
-def jwt_manager(app, api=None):
-    """Setup Flask-JWT-Extended extension for services
-    with authenticated access"""
+def jwt_manager(app: Flask, api=None):
+    """Setup Flask-JWT-Extended extension for services with authenticated access.
+
+
+    """
     # https://flask-jwt-extended.readthedocs.io/en/stable/options
     app.config["JWT_TOKEN_LOCATION"] = ["headers", "cookies"]
     app.config["JWT_ACCESS_COOKIE_NAME"] = os.environ.get(
@@ -48,21 +50,21 @@ def jwt_manager(app, api=None):
             return {}
 
     @jwt.expired_token_loader
-    def handle_expired_token(jwtheader, jwtdata):
+    def handle_expired_token(jwt_header, jwt_data):
         # Unset cookies and redirect to requested page on expired token
         resp = redirect(request.url)
         unset_jwt_cookies(resp)
         return resp
 
     @jwt.invalid_token_loader
-    def handle_invalid_token(err):
+    def handle_invalid_token(err: str):
         # Unset cookies and redirect to requested page on token error
         resp = redirect(request.url)
         unset_jwt_cookies(resp)
         return resp
 
     @jwt.unauthorized_loader
-    def unauthorized(err):
+    def unauthorized(err: str):
         # Redirect to requested page on authorized error (i.e. CSRF token error)
         return redirect(request.url)
 
