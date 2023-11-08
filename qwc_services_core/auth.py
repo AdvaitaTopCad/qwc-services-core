@@ -3,7 +3,7 @@
 import os
 import re
 
-from flask import request
+from flask import request, Flask
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from .jwt import jwt_manager
@@ -16,7 +16,7 @@ ALLOW_BASIC_AUTH_USER = os.environ.get("ALLOW_BASIC_AUTH_USER", "False").lower()
 )
 
 
-def auth_manager(app, api=None):
+def auth_manager(app: Flask, api=None):
     """Authentication setup for Flask app"""
     # Setup the Flask-JWT-Extended extension
     return jwt_manager(app, api)
