@@ -32,7 +32,7 @@ delint:
 typecheck:
 	python -m mypy $(MODULE_NAME)
 
-test:
+test: lint typecheck
 	python -m pytest -v
 
 # https://packaging.python.org/guides/using-testpypi

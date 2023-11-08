@@ -27,12 +27,12 @@ class Api(BaseApi):
         # app_or_blueprint.add_url_rule(self.prefix or '/', 'root',
         #                               self.render_root)
 
-    def create_model(self, name: str, fields: List[Tuple(str, type)]) -> Any:
+    def create_model(self, name: str, fields: List[Tuple[str, type]]) -> Any:
         """Helper for creating api models with ordered fields.
 
         Args:
-            name: Model name
-            fields: List of tuples containing ['field name', <type>]
+            name: Model name.
+            fields: List of tuples containing ``['field name', <type>]``.
 
         Returns:
             The model object.
@@ -40,7 +40,7 @@ class Api(BaseApi):
         return create_model(self, name, fields)
 
 
-def create_model(api: Api, name: str, fields: Tuple[str, Any]) -> Any:
+def create_model(api: Api, name: str, fields: List[Tuple[str, Any]]) -> Any:
     """Helper for creating api models with ordered fields.
 
     Args:
@@ -85,7 +85,7 @@ class CaseInsensitiveMultiDict(MultiDict):
         super().__init__(mapping)
         self.lower_key_map = {key.lower(): key for key in self}
 
-    def __contains__(self, key: str) -> bool:
+    def __contains__(self, key: Any) -> bool:
         """Check if key is in the dict.
 
         Args:
@@ -96,7 +96,7 @@ class CaseInsensitiveMultiDict(MultiDict):
         """
         return key.lower() in self.lower_key_map
 
-    def getlist(self, key: str) -> List[str]:
+    def getlist(self, key: Any) -> List[Any]:  # type: ignore
         """Get a list of values for a key.
 
         Args:
@@ -107,7 +107,7 @@ class CaseInsensitiveMultiDict(MultiDict):
         """
         return super().getlist(self.lower_key_map.get(key.lower()))
 
-    def pop(self, key):
+    def pop(self, key: Any):  # type: ignore
         """Remove a key and return its value.
 
         Note:

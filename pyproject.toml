@@ -11,6 +11,7 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
+    "attrs",
     "flask_jwt_extended",
     "flask_login",
     "flask_restx",
