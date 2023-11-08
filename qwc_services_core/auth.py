@@ -2,9 +2,10 @@
 """
 import os
 import re
+from typing import Any, Dict, List, Union
 
 from flask import request, Flask
-from flask_jwt_extended import get_jwt_identity, jwt_required
+from flask_jwt_extended import JWTManager, get_jwt_identity, jwt_required
 
 from .jwt import jwt_manager
 
@@ -16,24 +17,30 @@ ALLOW_BASIC_AUTH_USER = os.environ.get("ALLOW_BASIC_AUTH_USER", "False").lower()
 )
 
 
-def auth_manager(app: Flask, api=None):
+def auth_manager(app: Flask, api=None) -> JWTManager:
     """Authentication setup for Flask app"""
     # Setup the Flask-JWT-Extended extension
     return jwt_manager(app, api)
 
 
-def optional_auth(fn):
+def optional_auth(fn) -> Any:
     """Authentication view decorator"""
     return jwt_required(optional=True)(fn)
 
 
-def get_identity():
+def get_identity() -> Any:
     """Get identity (username oder dict with username and groups)"""
     return get_jwt_identity()
 
 
-def get_username(identity):
-    """Get username"""
+def get_username(identity: Union[None, str, Dict[str, str]]) -> str:
+    """
+    Get the username from the identity object.
+
+    Args:
+        identity: The identity object. Can be a string or a dict with a
+        `username` key.
+    """
     if identity:
         if isinstance(identity, dict):
             username = identity.get("username")
@@ -45,8 +52,16 @@ def get_username(identity):
     return username
 
 
-def get_groups(identity):
-    """Get user groups"""
+def get_groups(identity) -> List[str]:
+    """
+    Get user groups.
+
+    Args:
+        identity: The identity object.
+
+    Returns:
+        A list of group names.
+    """
     groups = []
     if identity:
         if isinstance(identity, dict):
@@ -57,7 +72,7 @@ def get_groups(identity):
     return groups
 
 
-def get_auth_user():
+def get_auth_user() -> str:
     """Get identity or optional pre-authenticated basic auth user"""
     identity = get_identity()
     if not identity and ALLOW_BASIC_AUTH_USER:
@@ -69,32 +84,45 @@ def get_auth_user():
 
 
 class GroupNameMapper:
-    """Group name mapping with regular expressions"""
+    """
+    Group name mapping with regular expressions
 
-    def __init__(self, default=""):
-        group_mappings = os.environ.get("GROUP_MAPPINGS", default)
+    Example
+    -------
 
-        def collect(mapping):
+    >>> mapper = GroupNameMapper('ship_crew~crew#gis.role.(.*)~\\1')
+    >>> print(mapper.mapped_group('ship_crew'))
+    >>> print(mapper.mapped_group('gis.role.admin'))
+    >>> print(mapper.mapped_group('gis.role.user.group1'))
+    >>> print(mapper.mapped_group('gis.none'))
+    """
+
+    def __init__(self, default: str = ""):
+        group_mappings: str = os.environ.get("GROUP_MAPPINGS", default)
+
+        def collect(mapping: str):
             regex, *replacement = mapping.split("~", 1)
-            return (re.compile(regex), replacement[0])
+            return (re.compile(regex), replacement[0] if replacement else "")
 
         self.group_mappings = (
-            list(map(collect, group_mappings.split("#"))) if group_mappings else []
+            list(map(collect, group_mappings.split("#")))
+            if group_mappings else []
         )
 
-    def mapped_group(self, group):
-        # LDAP servers my return a group as list object
+    def mapped_group(self, group: Union[str, List[str]]) -> str:
+        """
+        Maps group names to internal name using regular expressions.
+
+        Args:
+            group: The group name or list of group names (LDAP servers my
+            return a group as list object).
+
+        Returns:
+            A string with known group names replaced by internal names.
+        """
         if isinstance(group, list):
             group = " ".join(group)
         for regex, replacement in self.group_mappings:
             if regex.match(group):
                 return regex.sub(replacement, group)
         return group
-
-
-# Usage examples:
-# mapper = GroupNameMapper('ship_crew~crew#gis.role.(.*)~\\1')
-# print(mapper.mapped_group('ship_crew'))
-# print(mapper.mapped_group('gis.role.admin'))
-# print(mapper.mapped_group('gis.role.user.group1'))
-# print(mapper.mapped_group('gis.none'))
