@@ -1,3 +1,4 @@
+"""JWT setup for services with authenticated access."""
 import json
 import os
 from typing import Any, cast

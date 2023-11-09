@@ -6,7 +6,7 @@ from logging import Logger
 from typing import Any, Dict, Optional, TypedDict
 
 from attrs import define, field
-from flask import request
+from flask import Flask, request
 from flask.sessions import SecureCookieSessionInterface
 
 from .permissions_reader import PermissionsReader
@@ -227,29 +227,62 @@ class TenantHandler(TenantHandlerBase):
 
 
 class TenantPrefixMiddleware:
-    """WSGI middleware injecting tenant header in path"""
+    """WSGI middleware injecting tenant header in path.
 
-    def __init__(self, app, _header=None, _ignore_default=None):
+    Attributes:
+        app: Flask application instance.
+        tenant_handler: Tenant handler instance.
+        service_prefix: Service prefix (e.g. "/qwc_demo/").
+    """
+
+    app: Flask
+    tenant_handler: TenantHandlerBase
+    service_prefix: str
+
+    def __init__(
+        self,
+        app: Flask,
+        _header: Optional[Any] = None,
+        _ignore_default: Optional[bool] = None,
+    ):
+        """Constructor.
+
+        Args:
+            app: Flask application instance.
+            _header: Unused.
+            _ignore_default: Unused.
+        """
         self.app = app
         self.tenant_handler = TenantHandlerBase()
         self.service_prefix = (
             os.environ.get("QWC_SERVICE_PREFIX", "/").rstrip("/") + "/"
         )
 
-    def __call__(self, environ, start_response):
+    def __call__(self, environ: Dict[str, str], start_response: callable):
+        """WSGI middleware call.
+
+        See also https://www.python.org/dev/peps/pep-3333/#environ-variables
+
+        Args:
+            environ: WSGI environment variables.
+            start_response: WSGI start response callback.
+
+        Returns:
+            WSGI response.
+        """
         # environ in request http://localhost:9090/base/pages/test.html?arg=1
         # /base is mountpoint (e.g. via WSGIScriptAlias)
         # 'REQUEST_URI': '/base/pages/test.html?arg=1'
         # 'SCRIPT_NAME': '/base'
         # 'PATH_INFO': '/pages/test.html'
         # 'QUERY_STRING': 'arg=1'
-        # see also https://www.python.org/dev/peps/pep-3333/#environ-variables
+
         tenant = self.tenant_handler.environ_tenant(environ)
 
         if tenant and (
             self.tenant_handler.tenant_name or self.tenant_handler.tenant_header
         ):
-            # add tenant path prefix for multitenancy
+            # add tenant path prefix for multi-tenancy
             # NOTE: skipped if tenant already in path when using TENANT_URL_RE
             prefix = self.service_prefix + tenant
             environ["SCRIPT_NAME"] = prefix + environ.get("SCRIPT_NAME", "")
@@ -257,21 +290,43 @@ class TenantPrefixMiddleware:
 
 
 class TenantSessionInterface(SecureCookieSessionInterface, TenantHandlerBase):
-    """Flask session handler injecting tenant in JWT cookie path"""
+    """Flask session handler injecting tenant in JWT cookie path.
 
-    def __init__(self, environ):
-        SecureCookieSessionInterface.__init__(self)
-        TenantHandlerBase.__init__(self)
+    Attributes:
+        service_prefix: Service prefix (e.g. "/qwc_demo/").
+    """
+
+    service_prefix: str
+
+    def __init__(self, environ: Any):
+        """Constructor.
+
+        Args:
+            environ: WSGI environment variables.
+        """
+        super().__init__()
         self.service_prefix = environ.get("QWC_SERVICE_PREFIX", "").rstrip("/") + "/"
 
-    def tenant_path_prefix(self):
-        """Tenant path prefix /map/org1 ("$QWC_SERVICE_PREFIX/$TENANT")"""
+    def tenant_path_prefix(self) -> str:
+        """Tenant path prefix /map/org1 ("$QWC_SERVICE_PREFIX/$TENANT").
+
+        Returns:
+            Tenant path prefix.
+        """
         if self.is_multi():
             return self.service_prefix + self.tenant()
         else:
             return self.service_prefix
 
-    def get_cookie_path(self, app):
+    def get_cookie_path(self, app: Flask) -> str:
+        """Get cookie path for JWT access cookie.
+
+        Args:
+            app: Flask application instance.
+
+        Returns:
+            Cookie path.
+        """
         # https://flask.palletsprojects.com/en/1.1.x/api/#flask.sessions.SessionInterface.get_cookie_path
         prefix = self.tenant_path_prefix()
         # Set config as a side effect

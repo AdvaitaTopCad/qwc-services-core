@@ -1,3 +1,4 @@
+"""Database connection helper."""
 import os
 from typing import Dict, Optional
 

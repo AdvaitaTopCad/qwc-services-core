@@ -4,7 +4,12 @@ from unittest.mock import MagicMock
 import pytest
 from attr import define
 
-from qwc_services_core.tenant_handler import TenantHandler, TenantHandlerBase
+from qwc_services_core.tenant_handler import (
+    TenantHandler,
+    TenantHandlerBase,
+    TenantPrefixMiddleware,
+    TenantSessionInterface,
+)
 
 
 @pytest.fixture
@@ -244,3 +249,26 @@ class TestTenantHandler:
 
             (tmp_path / "bar").touch()
             assert h_full.last_config_update("x", "y") == 123
+
+
+class TestTenantPrefixMiddleware:
+    def test_init(self):
+        app = MagicMock()
+        testee = TenantPrefixMiddleware(app)
+        assert testee.app is app
+        assert isinstance(testee.tenant_handler, TenantHandlerBase)
+        assert testee.service_prefix == "/"
+
+
+class TestTenantSessionInterface:
+    def test_init_no_env(self, mocker):
+        environ = MagicMock()
+        environ.get.return_value = ""
+        testee = TenantSessionInterface(environ)
+        assert testee.service_prefix == "/"
+
+    def test_init_env(self, mocker):
+        environ = MagicMock()
+        environ.get.return_value = "foo"
+        testee = TenantSessionInterface(environ)
+        assert testee.service_prefix == "foo/"
