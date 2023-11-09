@@ -64,8 +64,8 @@ class TestGetAuthUser:
 
 class TestGroupNameMapper:
     def test_init(self, mocker):
-        mocker.patch("qwc_services_core.auth.os")
-        from qwc_services_core.auth import GroupNameMapper, os
+        os = mocker.patch("qwc_services_core.auth.os")
+        from qwc_services_core.auth import GroupNameMapper
 
         os.environ = {}
         mapper = GroupNameMapper()
