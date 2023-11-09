@@ -2,7 +2,8 @@
 import os
 import re
 from datetime import datetime
-from typing import Dict, Optional
+from logging import Logger
+from typing import Any, Dict, Optional, TypedDict
 
 from attrs import define, field
 from flask import request
@@ -119,27 +120,44 @@ class TenantHandlerBase:
         return DEFAULT_TENANT
 
 
+class HandlerRecord(TypedDict):
+    """Handler cache record.
+
+    Attributes:
+        handler: Service handler instance
+        last_update: Timestamp of last config file update.
+    """
+
+    handler: Any
+    last_update: datetime
+
+
+@define
 class TenantHandler(TenantHandlerBase):
-    """Tenant handler with configuration cache."""
+    """Tenant handler with configuration cache.
 
-    def __init__(self, logger):
-        """Constructor
+    Attributes:
+        logger: Logger instance
+        handler_cache: Cache for service handlers; first level maps the
+            name of the service handler to the list of tenants; second level
+            maps the tenant name to the handler instance and the timestamp of
+            the last config update.
+    """
 
-        :param Logger logger: Application logger
-        """
-        TenantHandlerBase.__init__(self)
-        self.logger = logger
-        self.handler_cache = {}  # handler_cache[handler_name][tenant]
+    logger: Logger
+    handler_cache: Dict[str, Dict[str, HandlerRecord]] = field(factory=dict, init=False)
 
-    def handler(self, service_name, handler_name, tenant):
+    def handler(self, service_name: str, handler_name: str, tenant: str):
         """Get service handler for tenant.
 
-        Return None if not yet registered or if config files have changed.
+        Args:
+            service_name: Service name used to determine the path of the
+                configuration file.
+            handler_name: Handler name (primary key into our cache).
+            tenant: Tenant ID
 
-        :param str service_name: Service name
-                                 (used for detecting config changes)
-        :param str handler_name: Handler name
-        :param str tenant: Tenant ID
+        Returns:
+            ``None`` if not yet registered or if config files have changed.
         """
         handlers = self.handler_cache.get(handler_name)
         if handlers:
@@ -147,18 +165,35 @@ class TenantHandler(TenantHandlerBase):
             if handler:
                 # check for config updates
                 last_update = self.last_config_update(service_name, tenant)
-                if last_update and last_update < handler.get("last_update"):
+                if last_update and last_update < handler["last_update"]:
                     # cache is up-to-date
-                    return handler.get("handler")
+                    return handler["handler"]
                 else:
                     # config has changed, remove handler from cache
                     if tenant in handlers:
                         del handlers[tenant]
-
+                        self.logger.debug(
+                            "Removed expired %s handler for %s tenant from cache",
+                            handler_name,
+                            tenant,
+                        )
+            else:
+                self.logger.debug("No handler for %s tenant", tenant)
+        else:
+            self.logger.debug("No handler cache for %s handler", handler_name)
         return None
 
-    def register_handler(self, handler_name, tenant, handler):
-        """Register service handler for tenant"""
+    def register_handler(self, handler_name: str, tenant: str, handler: Any) -> Any:
+        """Register service handler for tenant.
+
+        Args:
+            handler_name: Handler name (primary key into our cache).
+            tenant: Tenant ID.
+            handler: Service handler instance.
+
+        Returns:
+            Service handler instance (``handler`` argument).
+        """
         handlers = self.handler_cache.get(handler_name)
         if handlers is None:
             handlers = {}
@@ -166,13 +201,17 @@ class TenantHandler(TenantHandlerBase):
         handlers[tenant] = {"handler": handler, "last_update": datetime.utcnow()}
         return handler
 
-    def last_config_update(self, service_name, tenant):
-        """Return latest timestamp of config and permission files for a tenant.
+    def last_config_update(self, service_name: str, tenant: str) -> Optional[datetime]:
+        """Compute latest timestamp of config and permission files for a tenant.
 
-        :param str service_name: Service name
-        :param str tenant: Tenant ID
+        Args:
+            service_name: Service name.
+            tenant: Tenant ID.
+
+        Returns:
+            Latest timestamp of config and permission files or ``None`` if
+            neither of these files exist.
         """
-        # get latest timestamp of config and permission files
         last_config_update = None
         paths = [
             RuntimeConfig.config_file_path(service_name, tenant),
