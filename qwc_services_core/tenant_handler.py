@@ -1,7 +1,10 @@
+"""Tenant handler module."""
 import os
 import re
 from datetime import datetime
+from typing import Dict, Optional
 
+from attrs import define, field
 from flask import request
 from flask.sessions import SecureCookieSessionInterface
 
@@ -11,34 +14,81 @@ from .runtime_config import RuntimeConfig
 DEFAULT_TENANT = "default"
 
 
+@define
 class TenantHandlerBase:
-    """Tenant handler base class."""
+    """Tenant handler base class.
 
-    def __init__(self):
-        self.tenant_name = os.environ.get("QWC_TENANT")
-        self.tenant_header = os.environ.get("TENANT_HEADER")
-        self.tenant_url_re = os.environ.get("TENANT_URL_RE")
-        if self.tenant_url_re:
-            self.tenant_url_re = re.compile(self.tenant_url_re)
+    Attributes:
+        tenant_name: The name of the tenant; the value is taken from the
+            ``QWC_TENANT`` environment variable.
+        tenant_header: The header name to use when extracting the tenant name
+            from request headers (used as it is) or from WSGI middleware
+            (prefixed by ``HTTP_``, upper-cased); the value is taken from the
+            ``TENANT_HEADER`` environment variable.
+        tenant_url_re: The RegEx pattern to use for extracting the name of
+            the tenant from an URL; this value is ONLY used if the ``tenant_header``
+            attribute is not set; the value is taken from the ``TENANT_URL_RE``
+            environment variable.
+    """
 
-    def is_multi(self):
-        return self.tenant_name or self.tenant_header or self.tenant_url_re
+    tenant_name: Optional[str] = field(
+        factory=lambda: os.environ.get("QWC_TENANT"), init=False
+    )
+    tenant_header: Optional[str] = field(
+        factory=lambda: os.environ.get("TENANT_HEADER"), init=False
+    )
+    tenant_url_re: Optional[re.Pattern] = field(
+        factory=lambda: re.compile(os.environ.get("TENANT_URL_RE", ""))
+        if os.environ.get("TENANT_URL_RE")
+        else None,
+        init=False,
+    )
 
-    def tenant(self):
-        """Return tenant for current request."""
+    def is_multi(self) -> bool:
+        """Return True if multi-tenancy is enabled.
+
+        Any of the following environment variables enable multi-tenancy:
+        - QWC_TENANT
+        - TENANT_HEADER
+        - TENANT_URL_RE
+        """
+        return bool(self.tenant_name or self.tenant_header or self.tenant_url_re)
+
+    def tenant(self) -> str:
+        """Return the name of the tenant for current request.
+
+        The function looks for the tenant name in the request in the following order:
+        - ``tenant_name`` attribute of this instance,
+        - HTTP_``tenant_header`` header,
+        - ``tenant_url_re`` pattern in URL.
+
+        Returns:
+            The name of the tenant or ``DEFAULT_TENANT`` if no tenant name
+            could be found.
+        """
         return self.request_tenant()
 
-    def environ_tenant(self, environ):
-        """Return tenant for environ from WSGI middleware.
+    def environ_tenant(self, environ: Dict[str, str]) -> str:
+        """The name of the tenant for environ from WSGI middleware.
 
-        :param dict environ: WSGI environment variables
+        Args:
+            environ: WSGI environment variables
+
+        Returns:
+            The name of the tenant or ``DEFAULT_TENANT`` if no tenant name
+            could be found.
         """
         return self.request_tenant(environ)
 
-    def request_tenant(self, environ=None):
-        """Return tenant for current request or environ.
+    def request_tenant(self, environ: Optional[Dict[str, str]] = None) -> str:
+        """The name of the tenant for current request or environ.
 
-        :param dict environ: WSGI environment variables if using tenant header
+        Args:
+            environ: WSGI environment variables or ``None`` to use current request.
+
+        Returns:
+            The name of the tenant or ``DEFAULT_TENANT`` if no tenant name
+            could be found.
         """
         if self.tenant_name:
             return self.tenant_name
@@ -70,7 +120,7 @@ class TenantHandlerBase:
 
 
 class TenantHandler(TenantHandlerBase):
-    """Tenant handler with configuration cache"""
+    """Tenant handler with configuration cache."""
 
     def __init__(self, logger):
         """Constructor

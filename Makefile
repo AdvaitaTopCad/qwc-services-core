@@ -33,7 +33,11 @@ typecheck:
 	python -m mypy $(MODULE_NAME)
 
 test: lint typecheck
-	python -m pytest --cov-report term --cov-report html --cov=$(MODULE_NAME) $(MODULE_NAME)/
+	python -m pytest \
+		--cov-report term \
+		--cov-report html \
+		--cov-config=.coveragerc \
+		--cov=$(MODULE_NAME) $(MODULE_NAME)/
 
 # https://packaging.python.org/guides/using-testpypi
 testdist: sdist
