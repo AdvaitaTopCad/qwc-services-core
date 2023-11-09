@@ -1,20 +1,53 @@
+"""Sqlalchemy ORM models for ConfigDB queries."""
+from typing import Any, Dict, List, Optional, cast
+
 from flask_login import UserMixin
-from sqlalchemy import MetaData
+from sqlalchemy import Engine, MetaData
 from sqlalchemy.ext.automap import automap_base
+from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.orm import Session, backref, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from qwc_services_core.database import DatabaseEngine
+
 
 class ConfigModels:
-    """ConfigModels class
+    """Provide SQLAlchemy ORM models for ConfigDB queries.
 
-    Provide SQLAlchemy ORM models for ConfigDB queries.
+    Note:
+        The class relies on an existing database schema from which it
+        derives the models.
+
+    Attributes:
+        engine: The SQLAlchemy engine used to communicate with this database.
+        base: Base class for ORM models.
+        user_model: User model for flask_login.
+        custom_models: Extra models that are only used by the ``model()``
+            method, when the requested name is not found among the automap models.
     """
 
-    def __init__(self, db_engine, conn_str=None, extra_tables=[]):
-        """Constructor
+    engine: Engine
+    custom_models: Dict[str, str]
+    base: Any
+    user_model: DeclarativeMeta
 
-        :param DatabaseEngine db_engine: Database engine with DB connections
+    def __init__(
+        self,
+        db_engine: DatabaseEngine,
+        conn_str: Optional[str] = None,
+        extra_tables: List[str] = [],
+    ):
+        """Constructor.
+
+        We create a database engine from the given connection string or
+        from the ``CONFIGDB_URL`` environment variable if no connection string
+        is given. If a previous connection to the same database exists, we
+        reuse that connection.
+
+        Args:
+            db_engine: The connection pool to use.
+            conn_str: DB connection string for SQLAlchemy engine.
+            extra_tables: List of extra tables to include in the model.
         """
         if conn_str:
             self.engine = db_engine.db_engine(conn_str)
@@ -26,25 +59,33 @@ class ConfigModels:
         self.custom_models = {}
         self.init_models(extra_tables)
 
-    def session(self):
+    def session(self) -> Session:
         """Create a new session."""
         return Session(self.engine)
 
-    def model(self, name):
+    def model(self, name: str) -> DeclarativeMeta:
         """Get SQLAlchemy model.
 
-        :param str name: Table name of model
+        Args:
+            name: The name of the table to get the model for.
         """
         # get automap model or custom model
         if name == "users":
             return self.user_model
         else:
-            return self.base.classes.get(name) or self.custom_models.get(name)
+            return cast(
+                DeclarativeMeta,
+                self.base.classes.get(name) or self.custom_models.get(name),
+            )
 
-    def init_models(self, extra_tables):
-        """Setup SQLAlchemy ORM models."""
+    def init_models(self, extra_tables: List[str]):
+        """Setup SQLAlchemy ORM models.
 
-        # Generate required models from ConfigDB using automap
+        Args:
+            extra_tables: List of extra tables to include in the model. This list
+                is appended to the default list of tables that is then
+                used to filter the tables from the database schema.
+        """
         TABLES = [
             "users",
             "user_infos",
@@ -66,7 +107,7 @@ class ConfigModels:
 
         metadata = MetaData()
         metadata.reflect(self.engine, schema="qwc_config", only=table_selector)
-        Base = automap_base(metadata=metadata)
+        Base: Any = automap_base(metadata=metadata)
 
         # setup user model for flask_login
         class User(UserMixin, Base):
@@ -82,7 +123,7 @@ class ConfigModels:
         Base.prepare()
 
         self.base = Base
-        self.user_model = User
+        self.user_model = cast(DeclarativeMeta, User)
 
         UserInfo = Base.classes.user_infos
         Group = Base.classes.groups

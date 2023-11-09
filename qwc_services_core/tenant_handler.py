@@ -3,7 +3,7 @@ import os
 import re
 from datetime import datetime
 from logging import Logger
-from typing import Any, Dict, Optional, TypedDict
+from typing import Any, Callable, Dict, Optional, TypedDict
 
 from attrs import define, field
 from flask import Flask, request
@@ -258,7 +258,7 @@ class TenantPrefixMiddleware:
             os.environ.get("QWC_SERVICE_PREFIX", "/").rstrip("/") + "/"
         )
 
-    def __call__(self, environ: Dict[str, str], start_response: callable):
+    def __call__(self, environ: Dict[str, str], start_response: Callable):
         """WSGI middleware call.
 
         See also https://www.python.org/dev/peps/pep-3333/#environ-variables
