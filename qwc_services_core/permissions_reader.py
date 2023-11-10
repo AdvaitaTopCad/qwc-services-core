@@ -234,7 +234,7 @@ class PermissionsReader:
         flat list of permitted resources.
 
         :param list<obj> parent_resources: Parent resources
-        :param obj resources_lookup: Lookup for resources with sublayers or
+        :param obj resources_lookup: Lookup for resources with sub-layers or
                                      attributes
         """
         resources = []
